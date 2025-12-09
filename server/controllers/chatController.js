@@ -25,11 +25,17 @@ const chat = async (req, res) => {
             timestamp: new Date().toISOString()
         });
     } catch (error) {
-        console.error('Chat error:', error);
+        console.error('❌ Chat controller error:');
+        console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
+        console.error('Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+        
         res.status(500).json({ 
             error: 'Failed to get response from tutor',
-            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+            details: process.env.NODE_ENV === 'development' ? {
+                message: error.message,
+                type: error.constructor.name
+            } : undefined
         });
     }
 };

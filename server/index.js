@@ -9,6 +9,7 @@ const quizRoutes = require('./routes/quizRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const debugRoutes = require('./routes/debugRoutes');
 const progressRoutes = require('./routes/progressRoutes');
+const testRoutes = require('./routes/testRoutes');
 
 // Import database connection (to initialize it)
 require('./db/connection');
@@ -64,6 +65,7 @@ app.use('/api/quiz', quizRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/progress', progressRoutes);
+app.use('/api/test', testRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

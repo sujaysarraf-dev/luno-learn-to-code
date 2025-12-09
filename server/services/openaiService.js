@@ -4,20 +4,30 @@ require('dotenv').config();
 // Check if API key is set
 if (!process.env.OPENAI_API_KEY) {
     console.error('❌ OPENAI_API_KEY is not set in environment variables');
+    throw new Error('OPENAI_API_KEY is required');
 }
 
 // OpenRouter uses OpenAI-compatible API
 // If the key starts with sk-or-, use OpenRouter base URL
 const isOpenRouter = process.env.OPENAI_API_KEY?.startsWith('sk-or-');
 
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-    baseURL: isOpenRouter ? 'https://openrouter.ai/api/v1' : undefined,
-    defaultHeaders: isOpenRouter ? {
+// Build OpenAI config
+const openaiConfig = {
+    apiKey: process.env.OPENAI_API_KEY
+};
+
+if (isOpenRouter) {
+    openaiConfig.baseURL = 'https://openrouter.ai/api/v1';
+    openaiConfig.defaultHeaders = {
         'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
         'X-Title': 'Luno - AI Coding Tutor'
-    } : undefined
-});
+    };
+    console.log('✅ Using OpenRouter API');
+} else {
+    console.log('✅ Using OpenAI API');
+}
+
+const openai = new OpenAI(openaiConfig);
 
 /**
  * Explain a line of code using OpenAI
@@ -144,18 +154,24 @@ Format as JSON:
  */
 const chatWithTutor = async (message, conversationHistory = []) => {
     try {
+        if (!message || typeof message !== 'string') {
+            throw new Error('Message must be a non-empty string');
+        }
+
         const messages = [
             {
                 role: 'system',
                 content: 'You are Luno, a friendly and patient AI coding tutor specializing in HTML and CSS. You help students learn step-by-step, explain concepts clearly, and encourage them. Keep responses concise (under 200 words) and beginner-friendly.'
             },
-            ...conversationHistory,
+            ...(Array.isArray(conversationHistory) ? conversationHistory : []),
             {
                 role: 'user',
                 content: message
             }
         ];
 
+        console.log(`📤 Sending chat request to ${isOpenRouter ? 'OpenRouter' : 'OpenAI'}...`);
+        
         const response = await openai.chat.completions.create({
             model: isOpenRouter ? 'openai/gpt-3.5-turbo' : 'gpt-3.5-turbo',
             messages: messages,
@@ -163,19 +179,47 @@ const chatWithTutor = async (message, conversationHistory = []) => {
             temperature: 0.7
         });
 
-        return response.choices[0].message.content.trim();
+        if (!response || !response.choices || !response.choices[0]) {
+            throw new Error('Invalid response from API');
+        }
+
+        const content = response.choices[0].message?.content;
+        if (!content) {
+            throw new Error('Empty response from API');
+        }
+
+        console.log('✅ Chat response received');
+        return content.trim();
     } catch (error) {
-        console.error('OpenAI API error:', error);
-        console.error('Error details:', error.message);
-        console.error('Full error:', JSON.stringify(error, null, 2));
+        console.error('❌ OpenAI API error in chatWithTutor:');
+        console.error('Error message:', error.message);
+        console.error('Error type:', error.constructor.name);
+        
+        // Handle different error types
+        if (error.status) {
+            console.error('HTTP Status:', error.status);
+        }
         if (error.response) {
-            console.error('API Response Status:', error.response.status);
-            console.error('API Response Data:', JSON.stringify(error.response.data, null, 2));
+            console.error('Response Status:', error.response.status);
+            console.error('Response Data:', JSON.stringify(error.response.data, null, 2));
         }
         if (error.error) {
             console.error('Error object:', JSON.stringify(error.error, null, 2));
         }
-        const errorMessage = error.error?.message || error.message || 'Unknown error';
+        if (error.cause) {
+            console.error('Error cause:', error.cause);
+        }
+        
+        // Try to extract meaningful error message
+        let errorMessage = 'Unknown error';
+        if (error.error?.message) {
+            errorMessage = error.error.message;
+        } else if (error.response?.data?.error?.message) {
+            errorMessage = error.response.data.error.message;
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
         throw new Error(`Failed to get response from tutor: ${errorMessage}`);
     }
 };
