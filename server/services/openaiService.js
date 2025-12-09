@@ -21,11 +21,14 @@ if (process.env.OPENAI_API_KEY) {
 
     if (isOpenRouter) {
         openaiConfig.baseURL = 'https://openrouter.ai/api/v1';
+        // OpenRouter requires these headers
+        const siteUrl = process.env.SITE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
         openaiConfig.defaultHeaders = {
-            'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
+            'HTTP-Referer': siteUrl,
             'X-Title': 'Luno - AI Coding Tutor'
         };
         console.log('✅ Using OpenRouter API');
+        console.log(`📝 Site URL for headers: ${siteUrl}`);
     } else {
         console.log('✅ Using OpenAI API');
     }
