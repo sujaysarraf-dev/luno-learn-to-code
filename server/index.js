@@ -42,6 +42,10 @@ if (process.env.OPENAI_API_KEY) {
     const keyPrefix = process.env.OPENAI_API_KEY.substring(0, 7);
     const isOpenRouter = process.env.OPENAI_API_KEY.startsWith('sk-or-');
     console.log(`🔑 OpenAI API Key configured (${isOpenRouter ? 'OpenRouter' : 'OpenAI'}) - ${keyPrefix}...`);
+    if (isOpenRouter) {
+        console.log(`🌐 OpenRouter base URL: https://openrouter.ai/api/v1`);
+        console.log(`📝 Site URL: ${process.env.SITE_URL || 'http://localhost:5173'}`);
+    }
 } else {
     console.warn('⚠️  OPENAI_API_KEY not found in environment variables');
 }

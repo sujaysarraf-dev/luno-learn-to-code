@@ -197,20 +197,29 @@ const generateQuizForLesson = async (req, res) => {
 
         const quizId = quizResult.insertId;
 
+        // Validate quiz data structure
+        if (!quizData.questions || !Array.isArray(quizData.questions)) {
+            throw new Error('Invalid quiz data format: questions array not found');
+        }
+
         // Save questions
         for (let i = 0; i < quizData.questions.length; i++) {
             const q = quizData.questions[i];
+            if (!q.question || !q.options || !q.correctAnswer) {
+                console.error('Invalid question format:', q);
+                continue; // Skip invalid questions
+            }
             await pool.execute(
                 'INSERT INTO questions (quiz_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, order_index) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
                     quizId,
                     q.question,
-                    q.options.a,
-                    q.options.b,
-                    q.options.c,
-                    q.options.d,
+                    q.options.a || '',
+                    q.options.b || '',
+                    q.options.c || '',
+                    q.options.d || '',
                     q.correctAnswer,
-                    q.explanation,
+                    q.explanation || '',
                     i + 1
                 ]
             );

@@ -12,7 +12,11 @@ const isOpenRouter = process.env.OPENAI_API_KEY?.startsWith('sk-or-');
 
 const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY,
-    baseURL: isOpenRouter ? 'https://openrouter.ai/api/v1' : undefined
+    baseURL: isOpenRouter ? 'https://openrouter.ai/api/v1' : undefined,
+    defaultHeaders: isOpenRouter ? {
+        'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
+        'X-Title': 'Luno - AI Coding Tutor'
+    } : undefined
 });
 
 /**
@@ -52,10 +56,16 @@ Keep the explanation:
     } catch (error) {
         console.error('OpenAI API error:', error);
         console.error('Error details:', error.message);
+        console.error('Full error:', JSON.stringify(error, null, 2));
         if (error.response) {
-            console.error('API Response:', error.response.status, error.response.data);
+            console.error('API Response Status:', error.response.status);
+            console.error('API Response Data:', JSON.stringify(error.response.data, null, 2));
         }
-        throw new Error(`Failed to generate explanation: ${error.message}`);
+        if (error.error) {
+            console.error('Error object:', JSON.stringify(error.error, null, 2));
+        }
+        const errorMessage = error.error?.message || error.message || 'Unknown error';
+        throw new Error(`Failed to generate explanation: ${errorMessage}`);
     }
 };
 
@@ -116,10 +126,16 @@ Format as JSON:
     } catch (error) {
         console.error('OpenAI API error:', error);
         console.error('Error details:', error.message);
+        console.error('Full error:', JSON.stringify(error, null, 2));
         if (error.response) {
-            console.error('API Response:', error.response.status, error.response.data);
+            console.error('API Response Status:', error.response.status);
+            console.error('API Response Data:', JSON.stringify(error.response.data, null, 2));
         }
-        throw new Error(`Failed to generate quiz: ${error.message}`);
+        if (error.error) {
+            console.error('Error object:', JSON.stringify(error.error, null, 2));
+        }
+        const errorMessage = error.error?.message || error.message || 'Unknown error';
+        throw new Error(`Failed to generate quiz: ${errorMessage}`);
     }
 };
 
@@ -151,10 +167,16 @@ const chatWithTutor = async (message, conversationHistory = []) => {
     } catch (error) {
         console.error('OpenAI API error:', error);
         console.error('Error details:', error.message);
+        console.error('Full error:', JSON.stringify(error, null, 2));
         if (error.response) {
-            console.error('API Response:', error.response.status, error.response.data);
+            console.error('API Response Status:', error.response.status);
+            console.error('API Response Data:', JSON.stringify(error.response.data, null, 2));
         }
-        throw new Error(`Failed to get response from tutor: ${error.message}`);
+        if (error.error) {
+            console.error('Error object:', JSON.stringify(error.error, null, 2));
+        }
+        const errorMessage = error.error?.message || error.message || 'Unknown error';
+        throw new Error(`Failed to get response from tutor: ${errorMessage}`);
     }
 };
 
