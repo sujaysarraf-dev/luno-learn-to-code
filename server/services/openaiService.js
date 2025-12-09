@@ -4,7 +4,7 @@ require('dotenv').config();
 // Check if API key is set
 if (!process.env.OPENAI_API_KEY) {
     console.error('❌ OPENAI_API_KEY is not set in environment variables');
-    throw new Error('OPENAI_API_KEY is required');
+    // Don't throw here - let individual functions handle the error
 }
 
 // OpenRouter uses OpenAI-compatible API
@@ -12,27 +12,36 @@ if (!process.env.OPENAI_API_KEY) {
 const isOpenRouter = process.env.OPENAI_API_KEY?.startsWith('sk-or-');
 
 // Build OpenAI config
-const openaiConfig = {
-    apiKey: process.env.OPENAI_API_KEY
-};
+let openai = null;
 
-if (isOpenRouter) {
-    openaiConfig.baseURL = 'https://openrouter.ai/api/v1';
-    openaiConfig.defaultHeaders = {
-        'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
-        'X-Title': 'Luno - AI Coding Tutor'
+if (process.env.OPENAI_API_KEY) {
+    const openaiConfig = {
+        apiKey: process.env.OPENAI_API_KEY
     };
-    console.log('✅ Using OpenRouter API');
-} else {
-    console.log('✅ Using OpenAI API');
-}
 
-const openai = new OpenAI(openaiConfig);
+    if (isOpenRouter) {
+        openaiConfig.baseURL = 'https://openrouter.ai/api/v1';
+        openaiConfig.defaultHeaders = {
+            'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
+            'X-Title': 'Luno - AI Coding Tutor'
+        };
+        console.log('✅ Using OpenRouter API');
+    } else {
+        console.log('✅ Using OpenAI API');
+    }
+
+    openai = new OpenAI(openaiConfig);
+} else {
+    console.warn('⚠️  OpenAI client not initialized - API key missing');
+}
 
 /**
  * Explain a line of code using OpenAI
  */
 const explainLine = async (codeLine, context = '') => {
+    if (!openai) {
+        throw new Error('OpenAI API key is not configured');
+    }
     try {
         const prompt = `You are a friendly coding tutor teaching HTML and CSS to beginners. Explain this line of code in a simple, encouraging way:
 
@@ -83,6 +92,9 @@ Keep the explanation:
  * Generate quiz questions for a lesson
  */
 const generateQuiz = async (lessonContent, lessonTitle) => {
+    if (!openai) {
+        throw new Error('OpenAI API key is not configured');
+    }
     try {
         const prompt = `Generate 5 multiple-choice questions about this HTML/CSS lesson:
 
@@ -153,6 +165,9 @@ Format as JSON:
  * Chat with AI tutor
  */
 const chatWithTutor = async (message, conversationHistory = []) => {
+    if (!openai) {
+        throw new Error('OpenAI API key is not configured');
+    }
     try {
         if (!message || typeof message !== 'string') {
             throw new Error('Message must be a non-empty string');
@@ -228,6 +243,9 @@ const chatWithTutor = async (message, conversationHistory = []) => {
  * Debug code and provide suggestions
  */
 const debugCode = async (code, errorMessage = '') => {
+    if (!openai) {
+        throw new Error('OpenAI API key is not configured');
+    }
     try {
         const prompt = `A student is having trouble with their HTML/CSS code. Help them debug it:
 
