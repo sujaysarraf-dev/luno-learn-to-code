@@ -59,8 +59,15 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-app.listen(PORT, () => {
-    console.log(`🚀 Luno server running on port ${PORT}`);
-    console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// Export for Vercel serverless
+if (require.main === module) {
+    // Only start server if running directly (not in Vercel)
+    app.listen(PORT, () => {
+        console.log(`🚀 Luno server running on port ${PORT}`);
+        console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+}
+
+// Export app for Vercel
+module.exports = app;
 

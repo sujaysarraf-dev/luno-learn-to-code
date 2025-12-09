@@ -1,0 +1,17 @@
+node_modules
+.env
+.env.local
+.DS_Store
+*.log
+.vscode
+.idea
+server/node_modules
+client/node_modules
+client/.vite
+SETUP.md
+SETUP_CHECKLIST.md
+REMAINING_SETUP.md
+CREDENTIALS.md
+DEPLOYMENT.md
+VERCEL_DEPLOYMENT.md
+
