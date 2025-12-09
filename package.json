@@ -1,0 +1,25 @@
+{
+  "name": "luno-learn-to-code",
+  "version": "1.0.0",
+  "description": "AI-powered coding tutor for HTML and CSS",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd server && nodemon index.js",
+    "client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && node index.js"
+  },
+  "keywords": ["coding", "tutor", "ai", "html", "css"],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sujaysarraf-dev/luno-learn-to-code.git"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.2"
+  }
+}
+

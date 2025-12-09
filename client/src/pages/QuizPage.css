@@ -1,0 +1,266 @@
+.quiz-page {
+  min-height: 100vh;
+  background-color: var(--bg);
+}
+
+.quiz-container {
+  padding-bottom: 40px;
+}
+
+.quiz-header {
+  margin-bottom: 32px;
+  text-align: center;
+}
+
+.quiz-header h1 {
+  font-size: 32px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.quiz-header p {
+  font-size: 18px;
+  color: var(--text-light);
+}
+
+.quiz-questions {
+  margin-bottom: 32px;
+}
+
+.question-card {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.question-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.question-number {
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.question-text {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option-label {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.option-label:hover {
+  border-color: var(--primary);
+  background-color: rgba(99, 102, 241, 0.05);
+}
+
+.option-label input[type="radio"] {
+  margin-right: 12px;
+  cursor: pointer;
+}
+
+.option-label input[type="radio"]:checked + .option-letter {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.option-letter {
+  font-weight: 600;
+  margin-right: 8px;
+  min-width: 24px;
+  color: var(--text);
+}
+
+.option-text {
+  flex: 1;
+  color: var(--text);
+}
+
+.quiz-actions {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.quiz-results {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.results-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.results-header h2 {
+  font-size: 32px;
+  margin-bottom: 24px;
+  color: var(--text);
+}
+
+.score-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.score-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+}
+
+.score-number {
+  font-size: 48px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.score-label {
+  font-size: 16px;
+  opacity: 0.9;
+  margin-top: 4px;
+}
+
+.score-text {
+  font-size: 20px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.results-questions {
+  margin-bottom: 32px;
+}
+
+.result-card {
+  background-color: var(--card-bg);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid;
+}
+
+.result-card.correct {
+  border-left-color: var(--success);
+}
+
+.result-card.incorrect {
+  border-left-color: var(--danger);
+}
+
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.result-number {
+  color: var(--text-light);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.result-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.result-badge.correct {
+  background-color: var(--success);
+  color: white;
+}
+
+.result-badge.incorrect {
+  background-color: var(--danger);
+  color: white;
+}
+
+.result-question {
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.result-answers {
+  margin-bottom: 16px;
+  padding: 12px;
+  background-color: var(--bg);
+  border-radius: 8px;
+}
+
+.answer-item {
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.answer-item:last-child {
+  margin-bottom: 0;
+}
+
+.correct-text {
+  color: var(--success);
+  font-weight: 600;
+}
+
+.incorrect-text {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.result-explanation {
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.result-explanation strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.result-explanation p {
+  margin: 0;
+  color: var(--text);
+  line-height: 1.6;
+}
+
+.results-actions {
+  text-align: center;
+  padding: 24px 0;
+}
+
