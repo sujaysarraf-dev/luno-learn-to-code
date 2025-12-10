@@ -56,3 +56,48 @@ a:hover {
   text-decoration: underline;
 }
 
+/* Mobile optimizations */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Responsive base styles */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px;
+  }
+  
+  code {
+    font-size: 0.9em;
+    padding: 2px 6px;
+    word-break: break-word;
+  }
+  
+  /* Improve touch targets */
+  button, a, input, textarea, select {
+    touch-action: manipulation;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 16px;
+  }
+  
+  /* Prevent zoom on input focus (iOS) */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+

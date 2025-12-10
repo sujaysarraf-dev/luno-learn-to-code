@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { lessonsAPI } from '../services/api';
+import MobileMenu from '../components/MobileMenu';
 import './Dashboard.css';
 
 const Dashboard = ({ user, onLogout }) => {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
     fetchLessons();
@@ -44,6 +46,9 @@ const Dashboard = ({ user, onLogout }) => {
             <div className="nav-brand">
               <h2>🚀 Luno</h2>
             </div>
+            <button className="mobile-menu-toggle" onClick={() => setShowMobileMenu(true)}>
+              ☰
+            </button>
             <div className="nav-actions">
               <span className="nav-user">Welcome, {user.username}!</span>
               <button onClick={onLogout} className="btn btn-outline">
@@ -53,6 +58,14 @@ const Dashboard = ({ user, onLogout }) => {
           </div>
         </div>
       </nav>
+      
+      {showMobileMenu && (
+        <MobileMenu 
+          user={user} 
+          onLogout={onLogout} 
+          onClose={() => setShowMobileMenu(false)} 
+        />
+      )}
 
       <div className="container">
         <div className="dashboard-header">

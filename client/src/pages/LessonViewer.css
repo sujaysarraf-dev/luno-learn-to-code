@@ -3,6 +3,32 @@
   background-color: var(--bg);
 }
 
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: 2px solid var(--primary);
+  color: var(--primary);
+  font-size: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.mobile-menu-toggle:hover {
+  background-color: var(--primary);
+  color: white;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .lesson-container {
   padding-bottom: 40px;
 }
@@ -73,10 +99,17 @@
   border-radius: 4px;
   font-family: 'Courier New', monospace;
   color: #e2e8f0;
+  -webkit-tap-highlight-color: rgba(99, 102, 241, 0.2);
+  touch-action: manipulation;
+  user-select: none;
 }
 
 .code-line:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+.code-line:active {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .code-line.selected {
@@ -131,6 +164,173 @@
 @media (min-width: 1024px) {
   .lesson-content {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 1024px) {
+  .lesson-content {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .lesson-container {
+    padding-bottom: 24px;
+  }
+  
+  .lesson-header {
+    margin-bottom: 24px;
+  }
+  
+  .lesson-header h1 {
+    font-size: 24px;
+  }
+  
+  .lesson-header p {
+    font-size: 16px;
+  }
+  
+  .code-section {
+    padding: 16px;
+  }
+  
+  .code-section h2 {
+    font-size: 20px;
+  }
+  
+  .code-block {
+    padding: 12px;
+    font-size: 13px;
+  }
+  
+  .code-line {
+    padding: 6px 8px;
+    font-size: 13px;
+  }
+  
+  .line-number {
+    min-width: 30px;
+    margin-right: 12px;
+    font-size: 12px;
+  }
+  
+  .explanation-box {
+    padding: 16px;
+  }
+  
+  .explanation-box h3 {
+    font-size: 18px;
+  }
+  
+  .explanation-box p {
+    font-size: 14px;
+  }
+  
+  .lesson-actions {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .lesson-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-link {
+    padding: 8px 0;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  
+  .lesson-header {
+    margin-bottom: 20px;
+  }
+  
+  .lesson-header h1 {
+    font-size: 22px;
+    line-height: 1.3;
+    margin-bottom: 8px;
+  }
+  
+  .lesson-header p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 20px;
+  }
+  
+  .code-section {
+    padding: 12px;
+    border-radius: 10px;
+  }
+  
+  .code-section h2 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  
+  .instruction {
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+  
+  .code-block {
+    padding: 8px;
+    font-size: 12px;
+    border-radius: 6px;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .code-line {
+    padding: 12px 8px;
+    font-size: 12px;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    word-break: break-word;
+  }
+  
+  .line-number {
+    min-width: 28px;
+    margin-right: 10px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+  
+  .line-content {
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
+  
+  .explanation-box {
+    padding: 14px;
+    border-radius: 10px;
+    margin-top: 12px;
+  }
+  
+  .explanation-box h3 {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  
+  .explanation-box p {
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  
+  .lesson-actions {
+    margin-top: 16px;
+  }
+  
+  .lesson-actions .btn {
+    min-height: 48px;
+    font-size: 16px;
+    font-weight: 600;
   }
 }
 

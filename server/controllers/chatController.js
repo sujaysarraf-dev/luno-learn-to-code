@@ -28,15 +28,51 @@ const chat = async (req, res) => {
         console.error('❌ Chat controller error:');
         console.error('Error message:', error.message);
         console.error('Error stack:', error.stack);
-        console.error('Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+        if (error.response) {
+            console.error('Response status:', error.response.status);
+            console.error('Response data:', JSON.stringify(error.response.data, null, 2));
+        }
+        if (error.error) {
+            console.error('Error object:', JSON.stringify(error.error, null, 2));
+        }
         
-        res.status(500).json({ 
-            error: 'Failed to get response from tutor',
-            details: process.env.NODE_ENV === 'development' ? {
-                message: error.message,
-                type: error.constructor.name
-            } : undefined
-        });
+        // Check for specific OpenRouter errors
+        let userFriendlyMessage = 'Failed to get response from tutor';
+        let statusCode = 500;
+        
+        if (error.message && (error.message.includes('User not found') || error.message.includes('user not found'))) {
+            userFriendlyMessage = '⚠️ OpenRouter API key is invalid or expired. Please check your API key configuration in server/.env file.';
+            statusCode = 401;
+        } else if (error.message && error.message.includes('API key')) {
+            userFriendlyMessage = '⚠️ OpenAI API key is not configured correctly.';
+            statusCode = 500;
+        } else if (error.message && error.message.includes('Failed to get response from tutor')) {
+            // Extract the underlying error message
+            const underlyingError = error.message.replace('Failed to get response from tutor: ', '');
+            if (underlyingError.includes('User not found')) {
+                userFriendlyMessage = '⚠️ OpenRouter API key is invalid or expired. Please verify your API key at https://openrouter.ai/keys';
+                statusCode = 401;
+            } else {
+                userFriendlyMessage = '⚠️ ' + underlyingError;
+            }
+        }
+        
+        // Always send error details in development
+        const errorResponse = { 
+            error: userFriendlyMessage,
+            message: error.message || 'Unknown error',
+            type: error.constructor.name
+        };
+        
+        if (process.env.NODE_ENV === 'development') {
+            errorResponse.details = {
+                stack: error.stack,
+                response: error.response?.data,
+                error: error.error
+            };
+        }
+        
+        res.status(statusCode).json(errorResponse);
     }
 };
 

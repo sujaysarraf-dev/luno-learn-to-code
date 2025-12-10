@@ -1,41 +1,73 @@
 const OpenAI = require('openai');
 require('dotenv').config();
 
-// Check if API key is set
-if (!process.env.OPENAI_API_KEY) {
-    console.error('❌ OPENAI_API_KEY is not set in environment variables');
-    // Don't throw here - let individual functions handle the error
+// Import node-fetch for custom fetch implementation
+let nodeFetch = null;
+try {
+    nodeFetch = require('node-fetch');
+} catch (e) {
+    // Use global fetch if available (Node.js 18+)
+    if (typeof globalThis !== 'undefined' && globalThis.fetch) {
+        nodeFetch = globalThis.fetch;
+    } else if (typeof global !== 'undefined' && global.fetch) {
+        nodeFetch = global.fetch;
+    }
 }
 
-// OpenRouter uses OpenAI-compatible API
-// If the key starts with sk-or-, use OpenRouter base URL
-const isOpenRouter = process.env.OPENAI_API_KEY?.startsWith('sk-or-');
-
-// Build OpenAI config
+// Check if API key is set
+let isOpenRouter = false;
 let openai = null;
 
-if (process.env.OPENAI_API_KEY) {
-    const openaiConfig = {
-        apiKey: process.env.OPENAI_API_KEY
-    };
-
-    if (isOpenRouter) {
-        openaiConfig.baseURL = 'https://openrouter.ai/api/v1';
-        // OpenRouter requires these headers
-        const siteUrl = process.env.SITE_URL || process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173';
-        openaiConfig.defaultHeaders = {
-            'HTTP-Referer': siteUrl,
-            'X-Title': 'Luno - AI Coding Tutor'
-        };
-        console.log('✅ Using OpenRouter API');
-        console.log(`📝 Site URL for headers: ${siteUrl}`);
+try {
+    if (!process.env.OPENAI_API_KEY) {
+        console.warn('⚠️  OPENAI_API_KEY is not set in environment variables');
     } else {
-        console.log('✅ Using OpenAI API');
-    }
+        // OpenRouter uses OpenAI-compatible API
+        // If the key starts with sk-or-, use OpenRouter base URL
+        isOpenRouter = process.env.OPENAI_API_KEY.startsWith('sk-or-');
 
-    openai = new OpenAI(openaiConfig);
-} else {
-    console.warn('⚠️  OpenAI client not initialized - API key missing');
+        // Build OpenAI config
+        const openaiConfig = {
+            apiKey: process.env.OPENAI_API_KEY
+        };
+
+        if (isOpenRouter) {
+            openaiConfig.baseURL = 'https://openrouter.ai/api/v1';
+            const siteUrl = process.env.SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173');
+            
+            // Create custom fetch function to ensure OpenRouter headers are sent
+            if (nodeFetch) {
+                const originalFetch = nodeFetch;
+                openaiConfig.fetch = async (url, options = {}) => {
+                    const headers = {
+                        ...options.headers,
+                        'HTTP-Referer': siteUrl,
+                        'X-Title': 'Luno - AI Coding Tutor'
+                    };
+                    return originalFetch(url, { ...options, headers });
+                };
+            }
+            
+            // Also set defaultHeaders as backup
+            openaiConfig.defaultHeaders = {
+                'HTTP-Referer': siteUrl,
+                'X-Title': 'Luno - AI Coding Tutor'
+            };
+            
+            console.log('✅ Using OpenRouter API');
+            console.log(`📝 Site URL for headers: ${siteUrl}`);
+            console.log(`📝 Base URL: ${openaiConfig.baseURL}`);
+        } else {
+            console.log('✅ Using OpenAI API');
+        }
+
+        console.log('🔧 Initializing OpenAI client...');
+        openai = new OpenAI(openaiConfig);
+        console.log('✅ OpenAI client initialized successfully');
+    }
+} catch (err) {
+    console.error('⚠️  Error initializing OpenAI client:', err.message);
+    console.warn('⚠️  AI features will not work until API key is configured');
 }
 
 /**
@@ -168,9 +200,16 @@ Format as JSON:
  * Chat with AI tutor
  */
 const chatWithTutor = async (message, conversationHistory = []) => {
+    // Check if OpenAI client is initialized
     if (!openai) {
-        throw new Error('OpenAI API key is not configured');
+        console.error('❌ OpenAI client is not initialized');
+        if (!process.env.OPENAI_API_KEY) {
+            throw new Error('OpenAI API key is not configured in environment variables');
+        } else {
+            throw new Error('OpenAI client failed to initialize. Please check your API key.');
+        }
     }
+    
     try {
         if (!message || typeof message !== 'string') {
             throw new Error('Message must be a non-empty string');
@@ -188,13 +227,47 @@ const chatWithTutor = async (message, conversationHistory = []) => {
             }
         ];
 
-        console.log(`📤 Sending chat request to ${isOpenRouter ? 'OpenRouter' : 'OpenAI'}...`);
+        // Determine if using OpenRouter (check again in case module was reloaded)
+        const apiKey = process.env.OPENAI_API_KEY || '';
+        const usingOpenRouter = apiKey.startsWith('sk-or-');
+        const model = usingOpenRouter ? 'openai/gpt-3.5-turbo' : 'gpt-3.5-turbo';
         
-        const response = await openai.chat.completions.create({
-            model: isOpenRouter ? 'openai/gpt-3.5-turbo' : 'gpt-3.5-turbo',
+        console.log(`📤 Sending chat request to ${usingOpenRouter ? 'OpenRouter' : 'OpenAI'}...`);
+        console.log(`📝 Using model: ${model}`);
+        console.log(`📝 Message length: ${message.length} characters`);
+        console.log(`📝 History length: ${conversationHistory.length} messages`);
+        console.log(`📝 API Key prefix: ${process.env.OPENAI_API_KEY?.substring(0, 15)}...`);
+        
+        // For OpenRouter, ensure headers are included in the request
+        const requestOptions = {
+            model: model,
             messages: messages,
             max_tokens: 300,
             temperature: 0.7
+        };
+        
+        const response = await openai.chat.completions.create(requestOptions).catch(err => {
+            console.error('❌ OpenAI API call failed:');
+            console.error('Error type:', err.constructor.name);
+            console.error('Error message:', err.message);
+            if (err.status) {
+                console.error('HTTP Status:', err.status);
+            }
+            if (err.response) {
+                console.error('Response status:', err.response.status);
+                console.error('Response data:', JSON.stringify(err.response.data, null, 2));
+            }
+            if (err.error) {
+                console.error('Error object:', JSON.stringify(err.error, null, 2));
+            }
+            // Check for specific OpenRouter errors
+            if (err.message && err.message.includes('User not found')) {
+                console.error('⚠️  OpenRouter "User not found" error - this usually means:');
+                console.error('   1. The API key is invalid or expired');
+                console.error('   2. The OpenRouter account associated with the key doesn\'t exist');
+                console.error('   3. The API key format is incorrect');
+            }
+            throw err;
         });
 
         if (!response || !response.choices || !response.choices[0]) {

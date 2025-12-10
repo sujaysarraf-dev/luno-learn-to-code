@@ -363,5 +363,103 @@
   .editor-actions {
     justify-content: center;
   }
+  
+  .editor-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .editor-modal-title h2 {
+    font-size: 20px;
+  }
+  
+  .editor-modal-title p {
+    font-size: 12px;
+  }
+  
+  .editor-modal-toolbar {
+    padding: 12px 16px;
+  }
+  
+  .view-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .action-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .editor-modal-footer {
+    padding: 12px 16px;
+  }
+  
+  .footer-info {
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 480px) {
+  .editor-modal-header {
+    padding: 12px 16px;
+  }
+  
+  .editor-modal-title h2 {
+    font-size: 18px;
+  }
+  
+  .close-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 24px;
+  }
+  
+  .editor-modal-toolbar {
+    padding: 10px 12px;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .view-mode-selector {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .view-btn {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  
+  .editor-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .action-btn {
+    flex: 1;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  
+  .code-tabs {
+    padding: 0 8px;
+  }
+  
+  .code-tab {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+  
+  .editor-modal-footer {
+    padding: 10px 12px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  
+  .footer-info {
+    font-size: 10px;
+  }
 }
 

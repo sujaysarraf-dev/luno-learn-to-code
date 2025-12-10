@@ -18,7 +18,7 @@ const pool = mysql.createPool({
     timeout: 60000
 });
 
-// Test connection
+// Test connection (non-blocking - don't crash server if DB is down)
 pool.getConnection()
     .then(connection => {
         console.log('✅ Database connected successfully');
@@ -26,6 +26,8 @@ pool.getConnection()
     })
     .catch(err => {
         console.error('❌ Database connection error:', err.message);
+        console.error('⚠️  Server will continue but database operations may fail');
+        // Don't throw - let server start even if DB is down
     });
 
 module.exports = pool;

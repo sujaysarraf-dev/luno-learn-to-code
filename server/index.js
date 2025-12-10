@@ -12,7 +12,13 @@ const progressRoutes = require('./routes/progressRoutes');
 const testRoutes = require('./routes/testRoutes');
 
 // Import database connection (to initialize it)
-require('./db/connection');
+// Wrap in try-catch to prevent server crash if DB connection fails
+try {
+    require('./db/connection');
+} catch (err) {
+    console.error('⚠️  Database connection initialization error:', err.message);
+    console.error('⚠️  Server will continue but database operations may fail');
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -50,8 +56,17 @@ if (process.env.OPENAI_API_KEY) {
 } else {
     console.warn('⚠️  OPENAI_API_KEY not found in environment variables');
 }
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Request logging middleware (development only)
+if (process.env.NODE_ENV === 'development') {
+    app.use((req, res, next) => {
+        console.log(`${req.method} ${req.path}`);
+        next();
+    });
+}
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -86,6 +101,14 @@ if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`🚀 Luno server running on port ${PORT}`);
         console.log(`📚 Environment: ${process.env.NODE_ENV || 'development'}`);
+        console.log(`🌐 API available at http://localhost:${PORT}/api`);
+    }).on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`❌ Port ${PORT} is already in use. Please stop the other process or change PORT in .env`);
+        } else {
+            console.error('❌ Server error:', err);
+        }
+        process.exit(1);
     });
 }
 

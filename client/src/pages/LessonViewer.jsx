@@ -4,6 +4,7 @@ import { lessonsAPI } from '../services/api';
 import EditorModal from '../components/EditorModal';
 import ChatWidget from '../components/ChatWidget';
 import DebugModal from '../components/DebugModal';
+import MobileMenu from '../components/MobileMenu';
 import './LessonViewer.css';
 
 const LessonViewer = ({ user }) => {
@@ -18,6 +19,7 @@ const LessonViewer = ({ user }) => {
   const [showChat, setShowChat] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
   const [code, setCode] = useState('');
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   useEffect(() => {
     fetchLesson();
@@ -25,13 +27,22 @@ const LessonViewer = ({ user }) => {
 
   const fetchLesson = async () => {
     try {
+      setLoading(true);
       const response = await lessonsAPI.getById(id);
-      setLesson(response.data.lesson);
-      // Initialize code with lesson content
-      const initialCode = response.data.lesson.lines.map(l => l.code_content).join('\n');
-      setCode(initialCode);
+      if (response.data && response.data.lesson) {
+        setLesson(response.data.lesson);
+        // Initialize code with lesson content
+        if (response.data.lesson.lines && response.data.lesson.lines.length > 0) {
+          const initialCode = response.data.lesson.lines.map(l => l.code_content).join('\n');
+          setCode(initialCode);
+        }
+      } else {
+        console.error('Invalid lesson data received');
+        setLesson(null);
+      }
     } catch (err) {
       console.error('Failed to load lesson:', err);
+      setLesson(null);
     } finally {
       setLoading(false);
     }
@@ -50,9 +61,15 @@ const LessonViewer = ({ user }) => {
 
     try {
       const response = await lessonsAPI.explainLine(id, lineId);
-      setExplanation(response.data.explanation);
+      if (response.data && response.data.explanation) {
+        setExplanation(response.data.explanation);
+      } else {
+        setExplanation('No explanation available. Please try again.');
+      }
     } catch (err) {
-      setExplanation('Failed to load explanation. Please try again.');
+      console.error('Explanation error:', err);
+      const errorMsg = err.response?.data?.error || 'Failed to load explanation. Please try again.';
+      setExplanation(errorMsg);
     } finally {
       setLoadingExplanation(false);
     }
@@ -61,9 +78,15 @@ const LessonViewer = ({ user }) => {
   const handleGenerateQuiz = async () => {
     try {
       const response = await lessonsAPI.generateQuiz(id);
-      navigate(`/quiz/${response.data.quiz.id}`);
+      if (response.data && response.data.quiz) {
+        navigate(`/quiz/${response.data.quiz.id}`);
+      } else {
+        alert('Failed to generate quiz. Please try again.');
+      }
     } catch (err) {
-      alert('Failed to generate quiz. Please try again.');
+      console.error('Quiz generation error:', err);
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to generate quiz. Please try again.';
+      alert(errorMsg);
     }
   };
 
@@ -92,6 +115,9 @@ const LessonViewer = ({ user }) => {
             <Link to="/dashboard" className="nav-brand">
               <h2>🚀 Luno</h2>
             </Link>
+            <button className="mobile-menu-toggle" onClick={() => setShowMobileMenu(true)}>
+              ☰
+            </button>
             <div className="nav-actions">
               <button 
                 onClick={() => setShowEditor(true)} 
@@ -110,6 +136,17 @@ const LessonViewer = ({ user }) => {
           </div>
         </div>
       </nav>
+      
+      {showMobileMenu && (
+        <MobileMenu 
+          user={user}
+          onClose={() => setShowMobileMenu(false)}
+          showEditor={showEditor}
+          onShowEditor={() => setShowEditor(true)}
+          onShowChat={() => setShowChat(true)}
+          onShowDebug={() => setShowDebug(true)}
+        />
+      )}
 
       <div className="container lesson-container">
         <div className="lesson-header">

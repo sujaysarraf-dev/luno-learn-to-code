@@ -25,22 +25,31 @@ const getLesson = async (req, res) => {
         const { id } = req.params;
 
         // Get lesson details
-        const [lessons] = await pool.execute(
-            'SELECT id, title, description, order_index, difficulty_level FROM lessons WHERE id = ?',
-            [id]
-        );
+        let lessons, lines;
+        try {
+            [lessons] = await pool.execute(
+                'SELECT id, title, description, order_index, difficulty_level FROM lessons WHERE id = ?',
+                [id]
+            );
 
-        if (lessons.length === 0) {
-            return res.status(404).json({ error: 'Lesson not found' });
+            if (lessons.length === 0) {
+                return res.status(404).json({ error: 'Lesson not found' });
+            }
+
+            const lesson = lessons[0];
+
+            // Get lesson lines
+            [lines] = await pool.execute(
+                'SELECT id, line_number, code_content, line_type FROM lesson_lines WHERE lesson_id = ? ORDER BY line_number ASC',
+                [id]
+            );
+        } catch (dbError) {
+            console.error('Database error in getLesson:', dbError);
+            return res.status(500).json({ 
+                error: 'Database connection error',
+                details: process.env.NODE_ENV === 'development' ? dbError.message : undefined
+            });
         }
-
-        const lesson = lessons[0];
-
-        // Get lesson lines
-        const [lines] = await pool.execute(
-            'SELECT id, line_number, code_content, line_type FROM lesson_lines WHERE lesson_id = ? ORDER BY line_number ASC',
-            [id]
-        );
 
         // Track lesson access if user is authenticated
         if (req.userId) {
@@ -59,13 +68,17 @@ const getLesson = async (req, res) => {
 
         res.json({
             lesson: {
-                ...lesson,
-                lines
+                ...lessons[0],
+                lines: lines || []
             }
         });
     } catch (error) {
         console.error('Get lesson error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ 
+            error: 'Internal server error',
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };
 

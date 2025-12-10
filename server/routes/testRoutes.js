@@ -20,13 +20,18 @@ router.get('/test-api', async (req, res) => {
 
         if (isOpenRouter) {
             config.baseURL = 'https://openrouter.ai/api/v1';
-            config.defaultHeaders = {
-                'HTTP-Referer': process.env.SITE_URL || 'http://localhost:5173',
-                'X-Title': 'Luno - AI Coding Tutor'
-            };
+            const siteUrl = process.env.SITE_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173');
+            config.defaultHeaders = {};
+            config.defaultHeaders['HTTP-Referer'] = siteUrl;
+            config.defaultHeaders['X-Title'] = 'Luno - AI Coding Tutor';
+            console.log('🧪 Test: Using OpenRouter with site URL:', siteUrl);
+        } else {
+            console.log('🧪 Test: Using OpenAI');
         }
 
+        console.log('🧪 Test: Creating OpenAI client...');
         const openai = new OpenAI(config);
+        console.log('🧪 Test: OpenAI client created');
 
         const response = await openai.chat.completions.create({
             model: isOpenRouter ? 'openai/gpt-3.5-turbo' : 'gpt-3.5-turbo',
