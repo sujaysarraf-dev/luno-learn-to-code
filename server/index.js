@@ -10,6 +10,8 @@ const chatRoutes = require('./routes/chatRoutes');
 const debugRoutes = require('./routes/debugRoutes');
 const progressRoutes = require('./routes/progressRoutes');
 const testRoutes = require('./routes/testRoutes');
+const streakRoutes = require('./routes/streakRoutes');
+const codeReviewRoutes = require('./routes/codeReviewRoutes');
 
 // Import database connection (to initialize it)
 // Wrap in try-catch to prevent server crash if DB connection fails
@@ -81,6 +83,8 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/progress', progressRoutes);
 app.use('/api/test', testRoutes);
+app.use('/api/streak', streakRoutes);
+app.use('/api/code-review', codeReviewRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

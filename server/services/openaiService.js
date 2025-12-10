@@ -364,10 +364,105 @@ Keep it beginner-friendly and encouraging.`;
     }
 };
 
+/**
+ * Analyze code and provide suggestions for improvement
+ */
+const analyzeCode = async (code, language = 'html') => {
+    if (!openai) {
+        throw new Error('OpenAI API key is not configured');
+    }
+    
+    try {
+        const systemPrompt = `You are an expert code reviewer specializing in ${language.toUpperCase()}. 
+Analyze the provided code and give constructive feedback. Focus on:
+1. Best practices and code quality
+2. Common mistakes and how to fix them
+3. Performance improvements
+4. Accessibility and semantic HTML
+5. Modern CSS techniques
+
+Be encouraging and educational. Format your response as JSON with this structure:
+{
+    "score": 0-100,
+    "suggestions": [
+        {
+            "type": "error|warning|info|suggestion",
+            "line": line_number (optional),
+            "message": "Brief description",
+            "explanation": "Detailed explanation of why this matters",
+            "code": "suggested code fix (optional)"
+        }
+    ],
+    "summary": "Overall assessment"
+}`;
+
+        const userPrompt = `Review this ${language.toUpperCase()} code and provide suggestions:
+
+\`\`\`${language}
+${code}
+\`\`\`
+
+Provide a JSON response with score, suggestions array, and summary.`;
+
+        const response = await openai.chat.completions.create({
+            model: isOpenRouter ? 'openai/gpt-3.5-turbo' : 'gpt-3.5-turbo',
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt }
+            ],
+            max_tokens: 1500,
+            temperature: 0.3
+        });
+
+        const content = response.choices[0].message.content.trim();
+        
+        // Try to parse JSON response
+        let result;
+        try {
+            // Extract JSON from markdown code blocks if present
+            const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || content.match(/```\n([\s\S]*?)\n```/);
+            const jsonContent = jsonMatch ? jsonMatch[1] : content;
+            result = JSON.parse(jsonContent);
+        } catch (parseError) {
+            // If JSON parsing fails, create a structured response from text
+            console.warn('Failed to parse AI response as JSON, creating structured response');
+            result = {
+                score: 75,
+                suggestions: [
+                    {
+                        type: 'info',
+                        message: 'Code Review',
+                        explanation: content.substring(0, 500),
+                        code: null
+                    }
+                ],
+                summary: content.substring(0, 200)
+            };
+        }
+
+        // Ensure result has required structure
+        if (!result.suggestions) {
+            result.suggestions = [];
+        }
+        if (typeof result.score !== 'number') {
+            result.score = 75;
+        }
+        if (!result.summary) {
+            result.summary = 'Code review completed';
+        }
+
+        return result;
+    } catch (error) {
+        console.error('Analyze code error:', error);
+        throw new Error(`Failed to analyze code: ${error.message}`);
+    }
+};
+
 module.exports = {
     explainLine,
     generateQuiz,
     chatWithTutor,
-    debugCode
+    debugCode,
+    analyzeCode
 };
 

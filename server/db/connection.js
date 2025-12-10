@@ -13,9 +13,7 @@ const pool = mysql.createPool({
     queueLimit: 0,
     enableKeepAlive: true,
     keepAliveInitialDelay: 0,
-    // Timeout settings for serverless
-    acquireTimeout: 60000,
-    timeout: 60000
+    connectTimeout: 60000
 });
 
 // Test connection (non-blocking - don't crash server if DB is down)

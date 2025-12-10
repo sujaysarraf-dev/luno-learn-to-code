@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import Editor from '@monaco-editor/react';
+import CodeReviewPanel from './CodeReviewPanel';
 import './EditorModal.css';
 
 const EditorModal = ({ code, onCodeChange, onClose }) => {
@@ -8,6 +9,7 @@ const EditorModal = ({ code, onCodeChange, onClose }) => {
   const [activeCodeTab, setActiveCodeTab] = useState('html'); // 'html' or 'css'
   const [viewMode, setViewMode] = useState('split'); // 'split', 'editor', 'preview'
   const [previewKey, setPreviewKey] = useState(0);
+  const [showReview, setShowReview] = useState(false);
 
   useEffect(() => {
     // Split initial code into HTML and CSS
@@ -137,6 +139,13 @@ const EditorModal = ({ code, onCodeChange, onClose }) => {
             </button>
           </div>
           <div className="editor-actions">
+            <button 
+              onClick={() => setShowReview(!showReview)} 
+              className={`action-btn ${showReview ? 'active' : ''}`}
+              title="Toggle AI Code Review"
+            >
+              🤖 {showReview ? 'Hide' : 'Show'} Review
+            </button>
             <button onClick={handleReset} className="action-btn" title="Reset to Lesson Code">
               🔄 Reset
             </button>
@@ -151,6 +160,7 @@ const EditorModal = ({ code, onCodeChange, onClose }) => {
         </div>
 
         <div className="editor-modal-content">
+          <div className={`editor-main-area ${showReview ? 'with-review' : ''}`}>
           {(viewMode === 'split' || viewMode === 'editor') && (
             <div className="editor-panel">
               <div className="code-tabs">
@@ -236,6 +246,60 @@ const EditorModal = ({ code, onCodeChange, onClose }) => {
                   sandbox="allow-scripts allow-same-origin"
                 />
               </div>
+            </div>
+          )}
+          </div>
+          {showReview && (
+            <div className="review-panel-wrapper">
+              <CodeReviewPanel
+                code={activeCodeTab === 'html' ? htmlCode : cssCode}
+                language={activeCodeTab}
+                onSuggestionClick={(suggestion) => {
+                  const currentCode = activeCodeTab === 'html' ? htmlCode : cssCode;
+                  let newCode = currentCode;
+                  
+                  // If suggestion has a line number, try to replace that specific line
+                  if (suggestion.line && suggestion.code) {
+                    const lines = currentCode.split('\n');
+                    const lineIndex = suggestion.line - 1; // Convert to 0-based index
+                    
+                    if (lineIndex >= 0 && lineIndex < lines.length) {
+                      // Replace the specific line
+                      lines[lineIndex] = suggestion.code;
+                      newCode = lines.join('\n');
+                    } else {
+                      // Line number out of range, append at the end
+                      newCode = currentCode + '\n' + suggestion.code;
+                    }
+                  } else if (suggestion.code) {
+                    // No line number, append the suggestion code
+                    // Check if it's a complete replacement or an addition
+                    const suggestionText = suggestion.code.trim();
+                    const currentText = currentCode.trim();
+                    
+                    // If suggestion is much shorter, it might be a partial fix
+                    // In that case, append it. Otherwise, it might be a complete replacement
+                    if (suggestionText.length < currentText.length * 0.5) {
+                      // Likely a partial fix - append it
+                      newCode = currentCode + '\n\n/* AI Suggestion */\n' + suggestion.code;
+                    } else {
+                      // Likely a complete replacement - ask user or append
+                      if (window.confirm('This suggestion appears to be a complete code replacement. Append it to your current code?')) {
+                        newCode = currentCode + '\n\n/* AI Suggestion - Review and use as needed */\n' + suggestion.code;
+                      } else {
+                        return; // User cancelled
+                      }
+                    }
+                  }
+                  
+                  // Apply the change
+                  if (activeCodeTab === 'html') {
+                    handleHtmlChange(newCode);
+                  } else {
+                    handleCssChange(newCode);
+                  }
+                }}
+              />
             </div>
           )}
         </div>

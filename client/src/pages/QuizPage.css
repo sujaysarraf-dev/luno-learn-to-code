@@ -260,8 +260,11 @@
 }
 
 .results-actions {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
   padding: 24px 0;
+  flex-wrap: wrap;
 }
 
 /* Responsive styles */
@@ -420,6 +423,11 @@
     padding: 12px;
     font-size: 14px;
     line-height: 1.6;
+  }
+  
+  .results-actions {
+    flex-direction: column;
+    gap: 12px;
   }
   
   .results-actions .btn {

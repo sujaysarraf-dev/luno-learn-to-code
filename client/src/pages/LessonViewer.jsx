@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { lessonsAPI } from '../services/api';
+import { lessonsAPI, progressAPI, streakAPI } from '../services/api';
 import EditorModal from '../components/EditorModal';
 import ChatWidget from '../components/ChatWidget';
 import DebugModal from '../components/DebugModal';
@@ -35,6 +35,15 @@ const LessonViewer = ({ user }) => {
         if (response.data.lesson.lines && response.data.lesson.lines.length > 0) {
           const initialCode = response.data.lesson.lines.map(l => l.code_content).join('\n');
           setCode(initialCode);
+        }
+        
+        // Track lesson access
+        try {
+          await progressAPI.trackAccess(id);
+          // Record activity for streak
+          await streakAPI.recordActivity('lesson', id, 5);
+        } catch (err) {
+          console.error('Failed to track lesson access:', err);
         }
       } else {
         console.error('Invalid lesson data received');

@@ -62,5 +62,33 @@ export const debugAPI = {
   debugCode: (code, errorMessage) => api.post('/debug', { code, errorMessage })
 };
 
+// Progress API
+export const progressAPI = {
+  getProgress: () => api.get('/progress/progress'),
+  getStats: () => api.get('/progress/stats'),
+  markCompleted: (lessonId) => api.post(`/progress/lesson/${lessonId}/complete`),
+  trackAccess: (lessonId) => api.post(`/progress/lesson/${lessonId}/access`)
+};
+
+// Quiz History API
+export const quizHistoryAPI = {
+  getHistory: () => api.get('/quiz/history'),
+  getAttempts: (quizId) => api.get(`/quiz/${quizId}/attempts`)
+};
+
+// Streak API
+export const streakAPI = {
+  getStreak: () => api.get('/streak'),
+  recordActivity: (activityType, activityId, points) => api.post('/streak/activity', { activityType, activityId, points }),
+  completeChallenge: (challengeId) => api.post('/streak/challenge/complete', { challengeId }),
+  getTodayChallenge: () => api.get('/streak/challenge/today')
+};
+
+// Code Review API
+export const codeReviewAPI = {
+  reviewCode: (code, language = 'html') => api.post('/code-review/review', { code, language }),
+  getSuggestions: (code, issue, language = 'html') => api.post('/code-review/suggestions', { code, issue, language })
+};
+
 export default api;
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { quizAPI } from '../services/api';
+import { quizAPI, streakAPI } from '../services/api';
 import './QuizPage.css';
 
 const QuizPage = ({ user }) => {
@@ -44,7 +44,19 @@ const QuizPage = ({ user }) => {
       const response = await quizAPI.submit(id, answers);
       setResults(response.data);
       setSubmitted(true);
+      
+      // Record activity for streak
+      try {
+        const points = response.data.percentage >= 80 ? 10 : 5;
+        await streakAPI.recordActivity('quiz', id, points);
+      } catch (err) {
+        console.error('Failed to record quiz activity:', err);
+      }
+      
+      // If score is 80% or higher, lesson will be auto-marked as completed by backend
+      // Refresh dashboard data if we're going back
     } catch (err) {
+      console.error('Quiz submission error:', err);
       alert('Failed to submit quiz. Please try again.');
     } finally {
       setSubmitting(false);
@@ -183,9 +195,17 @@ const QuizPage = ({ user }) => {
             </div>
 
             <div className="results-actions">
-              <Link to="/dashboard" className="btn btn-primary">
+              {quiz && quiz.lesson_id && (
+                <button 
+                  onClick={() => navigate(`/lesson/${quiz.lesson_id}`)} 
+                  className="btn btn-outline"
+                >
+                  ← Back to Lesson
+                </button>
+              )}
+              <button onClick={() => navigate('/dashboard')} className="btn btn-primary">
                 Back to Dashboard
-              </Link>
+              </button>
             </div>
           </div>
         )}
