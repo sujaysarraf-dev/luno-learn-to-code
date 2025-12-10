@@ -323,34 +323,57 @@ const debugCode = async (code, errorMessage = '') => {
         throw new Error('OpenAI API key is not configured');
     }
     try {
-        const prompt = `A student is having trouble with their HTML/CSS code. Help them debug it:
+        const systemPrompt = `You are a debugging assistant for BEGINNERS. Find ONLY ACTUAL ERRORS that break the code.
+
+STRICT RULES - ONLY REPORT IF CODE IS BROKEN:
+✅ DO report: Missing closing tags, typos in tag names, missing quotes, CSS syntax errors
+❌ DO NOT report: Tags in wrong order, missing DOCTYPE, missing alt text, semantic HTML, best practices
+
+EXAMPLES OF FALSE POSITIVES TO AVOID:
+- "Head tag is not closed" when </head> exists → FALSE (code works)
+- "Missing DOCTYPE" → FALSE (code works in modern browsers)
+- "Title should be in head" → FALSE (code works)
+- "Missing alt text" → FALSE (code works)
+- "Use semantic HTML" → FALSE (code works)
+
+ONLY FIND REAL ERRORS:
+1. Missing closing tag: <div> without </div> (breaks layout)
+2. Typo in tag: <dv> instead of <div> (doesn't render)
+3. Missing quotes: class=test instead of class="test" (breaks in some cases)
+4. CSS syntax: color red; instead of color: red; (doesn't work)
+5. Invalid CSS property: colr instead of color (doesn't work)
+
+If code WORKS (even if not perfect), say: "Your code looks correct! It should work. If you're seeing an error, please share the specific error message."`;
+
+        const userPrompt = `Debug this HTML/CSS code. Find ONLY errors that make it NOT WORK.
 
 Code:
 ${code}
 
-${errorMessage ? `Error message: ${errorMessage}` : 'No specific error, but the code is not working as expected.'}
+${errorMessage ? `User's error message: ${errorMessage}` : 'User says code is not working, but no specific error provided.'}
 
-Provide:
-1. What's wrong with the code
-2. How to fix it
-3. A corrected version (if applicable)
+CRITICAL: Only report errors if code is ACTUALLY BROKEN. Do NOT report:
+- Tags in wrong order (if they exist, code works)
+- Missing DOCTYPE (code works)
+- Missing alt text (code works)
+- Best practices (code works)
 
-Keep it beginner-friendly and encouraging.`;
+If the code looks correct and should work, tell the user their code is fine and ask for the specific error they're seeing.`;
 
         const response = await openai.chat.completions.create({
             model: isOpenRouter ? 'openai/gpt-3.5-turbo' : 'gpt-3.5-turbo',
             messages: [
                 {
                     role: 'system',
-                    content: 'You are a helpful debugging assistant. Explain errors clearly and provide solutions in a friendly, encouraging way.'
+                    content: systemPrompt
                 },
                 {
                     role: 'user',
-                    content: prompt
+                    content: userPrompt
                 }
             ],
             max_tokens: 500,
-            temperature: 0.7
+            temperature: 0.3
         });
 
         return response.choices[0].message.content.trim();
@@ -373,36 +396,60 @@ const analyzeCode = async (code, language = 'html') => {
     }
     
     try {
-        const systemPrompt = `You are an expert code reviewer specializing in ${language.toUpperCase()}. 
-Analyze the provided code and give constructive feedback. Focus on:
-1. Best practices and code quality
-2. Common mistakes and how to fix them
-3. Performance improvements
-4. Accessibility and semantic HTML
-5. Modern CSS techniques
+        const systemPrompt = `You are a code checker for BEGINNERS. Your ONLY job is to find CODE THAT WON'T WORK.
 
-Be encouraging and educational. Format your response as JSON with this structure:
+STRICT RULES - ONLY SUGGEST IF CODE IS BROKEN:
+✅ DO suggest: Missing closing tags, typos in tag names, missing quotes, CSS syntax errors
+❌ DO NOT suggest: Moving tags, adding alt text, semantic HTML, best practices, accessibility, SEO, code organization
+
+EXAMPLES OF WHAT TO IGNORE:
+- Title tag outside head? IGNORE (code still works)
+- Missing alt text? IGNORE (code still works)
+- Using <div> instead of <section>? IGNORE (code still works)
+- Missing DOCTYPE? IGNORE (code still works in modern browsers)
+- Inline styles? IGNORE (code still works)
+
+ONLY FIND THESE BROKEN THINGS:
+1. Missing closing tag: <div> without </div> (breaks layout)
+2. Typo in tag name: <dv> instead of <div> (doesn't render)
+3. Missing quotes: class=test instead of class="test" (breaks in some cases)
+4. CSS syntax error: color red; instead of color: red; (doesn't work)
+5. Invalid CSS property: colr instead of color (doesn't work)
+
+If the code WORKS (even if not perfect), return empty suggestions array.
+
+Format your response as JSON:
 {
     "score": 0-100,
     "suggestions": [
         {
-            "type": "error|warning|info|suggestion",
-            "line": line_number (optional),
-            "message": "Brief description",
-            "explanation": "Detailed explanation of why this matters",
-            "code": "suggested code fix (optional)"
+            "type": "error",
+            "line": line_number,
+            "message": "What's broken (e.g., 'Missing closing </div> tag')",
+            "explanation": "One sentence: why this breaks the code",
+            "oldCode": "The broken code",
+            "newCode": "The working fix",
+            "priority": "high"
         }
     ],
-    "summary": "Overall assessment"
+    "summary": "One sentence"
 }`;
 
-        const userPrompt = `Review this ${language.toUpperCase()} code and provide suggestions:
+        const userPrompt = `Check this ${language.toUpperCase()} code. Find ONLY errors that make it NOT WORK.
 
+Code:
 \`\`\`${language}
 ${code}
 \`\`\`
 
-Provide a JSON response with score, suggestions array, and summary.`;
+CRITICAL RULES:
+- If code WORKS, return empty suggestions: []
+- Only find: missing closing tags, typos in tag/property names, missing quotes, CSS syntax errors
+- DO NOT suggest: moving tags, alt text, semantic HTML, best practices, accessibility, organization
+
+If the code renders and works (even if not perfect), return: {"score": 100, "suggestions": [], "summary": "Code works correctly"}
+
+Respond with valid JSON only.`;
 
         const response = await openai.chat.completions.create({
             model: isOpenRouter ? 'openai/gpt-3.5-turbo' : 'gpt-3.5-turbo',
@@ -411,7 +458,8 @@ Provide a JSON response with score, suggestions array, and summary.`;
                 { role: 'user', content: userPrompt }
             ],
             max_tokens: 1500,
-            temperature: 0.3
+            temperature: 0.3,
+            response_format: { type: "json_object" }
         });
 
         const content = response.choices[0].message.content.trim();

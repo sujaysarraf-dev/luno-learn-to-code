@@ -2,11 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { codeReviewAPI } from '../services/api';
 import './CodeReviewPanel.css';
 
-const CodeReviewPanel = ({ code, language = 'html', onSuggestionClick }) => {
+const CodeReviewPanel = ({ code, language = 'html', onSuggestionClick, refreshTrigger }) => {
   const [review, setReview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [autoReview, setAutoReview] = useState(true);
+  const [lastReviewedCode, setLastReviewedCode] = useState('');
 
   // Debounce function
   const debounce = (func, wait) => {
@@ -51,11 +52,26 @@ const CodeReviewPanel = ({ code, language = 'html', onSuggestionClick }) => {
     [autoReview, performReview]
   );
 
+  // Re-review when refreshTrigger changes (after applying fix)
   useEffect(() => {
-    if (autoReview && code) {
-      debouncedReview(code);
+    if (refreshTrigger && refreshTrigger > 0 && autoReview && code) {
+      setLastReviewedCode(code);
+      setReview(null); // Clear old review
+      performReview(code); // Immediate review after fix
     }
-  }, [code, autoReview, debouncedReview]);
+  }, [refreshTrigger, autoReview, code, performReview]);
+
+  // Normal debounced review for code changes (typing)
+  useEffect(() => {
+    if (autoReview && code && code !== lastReviewedCode) {
+      // Only debounce if it's not a refresh trigger
+      if (!refreshTrigger || refreshTrigger === 0) {
+        setLastReviewedCode(code);
+        setReview(null); // Clear old review when code changes
+        debouncedReview(code);
+      }
+    }
+  }, [code, autoReview, debouncedReview, lastReviewedCode, refreshTrigger]);
 
   const handleManualReview = () => {
     performReview(code);
@@ -124,7 +140,7 @@ const CodeReviewPanel = ({ code, language = 'html', onSuggestionClick }) => {
       {loading && (
         <div className="review-loading">
           <div className="spinner"></div>
-          <p>Analyzing your code...</p>
+          <p>{refreshTrigger ? 'Re-analyzing after fix...' : 'Analyzing your code...'}</p>
         </div>
       )}
 
@@ -145,6 +161,11 @@ const CodeReviewPanel = ({ code, language = 'html', onSuggestionClick }) => {
               <span className="score-label">Score</span>
             </div>
             <p className="score-summary">{review.summary || 'Code review completed'}</p>
+            {review.score >= 80 && (
+              <div className="score-badge-good">
+                ✅ Great job! Your code looks good!
+              </div>
+            )}
           </div>
 
           {review.suggestions && review.suggestions.length > 0 && (
@@ -161,7 +182,15 @@ const CodeReviewPanel = ({ code, language = 'html', onSuggestionClick }) => {
                     <span className="suggestion-type" style={{ color: getSuggestionColor(suggestion.type) }}>
                       {suggestion.type}
                     </span>
-                    {suggestion.line && (
+                    {suggestion.priority && (
+                      <span className={`priority-badge priority-${suggestion.priority}`}>
+                        {suggestion.priority}
+                      </span>
+                    )}
+                    {suggestion.startLine && suggestion.endLine && (
+                      <span className="suggestion-line">Lines {suggestion.startLine}-{suggestion.endLine}</span>
+                    )}
+                    {suggestion.line && !suggestion.startLine && (
                       <span className="suggestion-line">Line {suggestion.line}</span>
                     )}
                   </div>
@@ -169,15 +198,33 @@ const CodeReviewPanel = ({ code, language = 'html', onSuggestionClick }) => {
                   {suggestion.explanation && (
                     <p className="suggestion-explanation">{suggestion.explanation}</p>
                   )}
-                  {suggestion.code && (
+                  {(suggestion.newCode || suggestion.code) && (
                     <div className="suggestion-code">
-                      <code>{suggestion.code}</code>
+                      {suggestion.oldCode && (
+                        <div className="code-comparison">
+                          <div className="code-before">
+                            <span className="code-label">❌ Current:</span>
+                            <code>{suggestion.oldCode}</code>
+                          </div>
+                          <div className="code-arrow">↓</div>
+                          <div className="code-after">
+                            <span className="code-label">✅ Fixed:</span>
+                            <code>{suggestion.newCode || suggestion.code}</code>
+                          </div>
+                        </div>
+                      )}
+                      {!suggestion.oldCode && (
+                        <div className="code-single">
+                          <span className="code-label">💡 Suggested Fix:</span>
+                          <code>{suggestion.newCode || suggestion.code}</code>
+                        </div>
+                      )}
                       {onSuggestionClick && (
                         <button
                           onClick={() => onSuggestionClick(suggestion)}
                           className="apply-suggestion-btn"
                         >
-                          Apply
+                          ✨ Apply Fix
                         </button>
                       )}
                     </div>

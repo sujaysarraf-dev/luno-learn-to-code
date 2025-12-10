@@ -146,6 +146,17 @@
   margin: 0;
 }
 
+.score-badge-good {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+}
+
 .suggestions-list h4 {
   color: #fff;
   font-size: 14px;
@@ -185,6 +196,30 @@
   margin-left: auto;
 }
 
+.priority-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-left: 8px;
+}
+
+.priority-high {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.priority-medium {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+}
+
+.priority-low {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
 .suggestion-message {
   color: #fff;
   font-size: 13px;
@@ -203,9 +238,50 @@
   background-color: #1e1e1e;
   border: 1px solid #333;
   border-radius: 4px;
-  padding: 8px;
-  margin-top: 8px;
+  padding: 12px;
+  margin-top: 12px;
   position: relative;
+}
+
+.code-comparison {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.code-before,
+.code-after,
+.code-single {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.code-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
+}
+
+.code-before .code-label {
+  color: #ef4444;
+}
+
+.code-after .code-label {
+  color: #10b981;
+}
+
+.code-single .code-label {
+  color: #3b82f6;
+}
+
+.code-arrow {
+  text-align: center;
+  font-size: 16px;
+  color: #10b981;
+  margin: 4px 0;
 }
 
 .suggestion-code code {
@@ -215,6 +291,12 @@
   display: block;
   white-space: pre-wrap;
   word-break: break-all;
+  background-color: #252526;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #333;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 .apply-suggestion-btn {
